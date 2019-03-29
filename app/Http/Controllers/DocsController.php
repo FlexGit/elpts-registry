@@ -2,22 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use Session;
-use App\Doctypes;
-use App\Prefixes;
 use App\Countries;
-use App\Okopfs;
-use App\Templates;
 use App\Docs;
-use App\Logs;
-use App\Settings;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Doctypes;
 use App\Export;
-use Mail;
+use App\Logs;
+use App\Okopfs;
+use App\Prefixes;
+use App\Settings;
+use App\Templates;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Log;
+use Maatwebsite\Excel\Facades\Excel;
+use Mail;
+use Session;
 
 class DocsController extends Controller {
 	/**
@@ -501,7 +500,7 @@ class DocsController extends Controller {
 			$log->save();
 		}
 		
-		return redirect('/docs/' . $doctypes_id . '?page=' . $request->page . '&filter_prefix=' . $request->filter_prefix . '&filter_status=' . $request->filter_status . '&filter_ogrn=' . $request->filter_ogrn . '&filter_inn=' . $filter_inn . '&filter_orgname=' . $request->filter_orgname . '&filter_date_from=' . $request->filter_date_from . '&filter_date_to=' . $request->filter_date_to)
+		return redirect('/docs/' . $doctypes_id . '?page=' . $request->page . '&filter_prefix=' . $request->filter_prefix . '&filter_status=' . $request->filter_status . '&filter_ogrn=' . $request->filter_ogrn . '&filter_inn=' . $request->filter_inn . '&filter_orgname=' . $request->filter_orgname . '&filter_date_from=' . $request->filter_date_from . '&filter_date_to=' . $request->filter_date_to)
 			->with('success', 'Документ успешно сохранен!');
 	}
 	
