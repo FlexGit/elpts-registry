@@ -14,6 +14,6 @@ return [
     */
 
     'assets_path' => '',
-    'dss_uri' => 'http://192.168.135.231:8080/dss-server/DSSWebService?wsdl',
+    'dss_uri' => 'http://ss-rf-dss-2c.elpts.local:8080/dss-server/DSSWebService?wsdl',
 
 ];
