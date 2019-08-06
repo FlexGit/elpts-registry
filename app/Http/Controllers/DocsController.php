@@ -434,10 +434,19 @@ class DocsController extends Controller {
 		if ($request->status_id == 3 && !empty($template_values_arr['4']['value'])) {
 			// Replace Vars with Data
 			$template_values_arr['4']['value'] = str_replace('%NUMBER%', $doc->prefix_number, $template_values_arr['4']['value']);
-			$template_values_arr['4']['value'] = str_replace('%ORG_NAME%', $doc->prefix_number, $template_values_arr['4']['value']);
-			$template_values_arr['4']['value'] = str_replace('%INN%', $doc->prefix_number, $template_values_arr['4']['value']);
-			$template_values_arr['4']['value'] = str_replace('%OGRN%', $doc->prefix_number, $template_values_arr['4']['value']);
-			$template_values_arr['4']['value'] = str_replace('%SNILS%', $doc->prefix_number, $template_values_arr['4']['value']);
+			if (!empty($doc_values_arr[$id]['41']['value'])) {
+				$template_values_arr['4']['value'] = str_replace('%ORG_NAME%', $doc_values_arr[$id]['41']['value'], $template_values_arr['4']['value']);
+			}
+			if (!empty($doc_values_arr[$id]['4']['value'])) {
+				$template_values_arr['4']['value'] = str_replace('%INN%', $doc_values_arr[$id]['4']['value'], $template_values_arr['4']['value']);
+			}
+			if (!empty($doc_values_arr[$id]['5']['value'])) {
+				$template_values_arr['4']['value'] = str_replace('%OGRN%', $doc_values_arr[$id]['5']['value'], $template_values_arr['4']['value']);
+			}
+			if (!empty($doc_values_arr[$id]['36']['value'])) {
+				$template_values_arr['4']['value'] = str_replace('%SNILS%', $doc_values_arr[$id]['36']['value'], $template_values_arr['4']['value']);
+			}
+			$template_values_arr['4']['value'] = str_replace('%DATE%', date('d.m.Y'), $template_values_arr['4']['value']);
 			
 			Mail::send('emails.email_accepted_doc', ['body' => $template_values_arr['4']['value']], function ($message) use ($doc_values_arr, $id) {
 				$message->to($doc_values_arr[ $id ]['20']['value'])->subject('Уведомление о положительном результате рассмотрения акцепта документа');
@@ -469,10 +478,19 @@ class DocsController extends Controller {
 		if ($request->status_id == 4 && !empty($template_values_arr['5']['value'])) {
 			// Replace Vars with Data
 			$template_values_arr['5']['value'] = str_replace('%NUMBER%', $doc->prefix_number, $template_values_arr['5']['value']);
-			$template_values_arr['5']['value'] = str_replace('%ORG_NAME%', $doc->prefix_number, $template_values_arr['5']['value']);
-			$template_values_arr['5']['value'] = str_replace('%INN%', $doc->prefix_number, $template_values_arr['5']['value']);
-			$template_values_arr['5']['value'] = str_replace('%OGRN%', $doc->prefix_number, $template_values_arr['5']['value']);
-			$template_values_arr['5']['value'] = str_replace('%SNILS%', $doc->prefix_number, $template_values_arr['5']['value']);
+			if (!empty($doc_values_arr[$id]['41']['value'])) {
+				$template_values_arr['5']['value'] = str_replace('%ORG_NAME%', $doc_values_arr[$id]['41']['value'], $template_values_arr['5']['value']);
+			}
+			if (!empty($doc_values_arr[$id]['4']['value'])) {
+				$template_values_arr['5']['value'] = str_replace('%INN%', $doc_values_arr[$id]['4']['value'], $template_values_arr['5']['value']);
+			}
+			if (!empty($doc_values_arr[$id]['5']['value'])) {
+				$template_values_arr['5']['value'] = str_replace('%OGRN%', $doc_values_arr[$id]['5']['value'], $template_values_arr['5']['value']);
+			}
+			if (!empty($doc_values_arr[$id]['36']['value'])) {
+				$template_values_arr['5']['value'] = str_replace('%SNILS%', $doc_values_arr[$id]['36']['value'], $template_values_arr['5']['value']);
+			}
+			$template_values_arr['5']['value'] = str_replace('%DATE%', date('d.m.Y'), $template_values_arr['5']['value']);
 			
 			Mail::send('emails.email_rejected_doc', ['body' => $template_values_arr['5']['value'], 'rejected_reason' => $request->rejected_reason], function ($message) use ($doc_values_arr, $id) {
 				$message->to($doc_values_arr[ $id ]['20']['value'])->subject('Уведомление об отрицательном результате рассмотрения акцепта документа');
