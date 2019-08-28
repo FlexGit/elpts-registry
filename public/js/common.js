@@ -258,7 +258,7 @@ $(document).ready(function () {
 			var add_content = '';
 
 			if ($this.data('status_id') == 4) {
-				$('.add-content').append('<textarea name="rejected_reason" class="form-control" placeholder="Причина отказа" maxlength="200" style="height:100px;"></textarea>');
+				$('.add-content').append('<textarea name="rejected_reason" class="form-control" placeholder="Причина отказа" maxlength="500" style="height:100px;"></textarea>');
 			} else {
 				var notagreed = 0;
 				$('.status_class').each(function () {
