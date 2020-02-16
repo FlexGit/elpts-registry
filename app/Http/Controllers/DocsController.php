@@ -11,6 +11,7 @@ use App\Okopfs;
 use App\Prefixes;
 use App\Settings;
 use App\Templates;
+use App\Aliases;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Log;
@@ -130,7 +131,7 @@ class DocsController extends Controller {
 		
 		// Get Doc Fields Values
 		$doc_values_arr = $docs_obj->getDocsFieldsValues($ids);
-		
+
 		// Get Statuses
 		$statuses = $docs_obj->getStatuses($doctypes_id);
 		
@@ -339,6 +340,20 @@ class DocsController extends Controller {
 		// Get Only Doc User Fields
 		$doc_fields = $docs_obj->getDocsFields($doctypes_id, true);
 		
+		// Get Aliases
+		$docsFieldsAliases = Aliases::where('templates_id', $docs[0]['templates_id'])->get();
+		
+		$aliases = [];
+		if (count($docsFieldsAliases) > 0) {
+			foreach ($docsFieldsAliases->all() as $docsFieldsAlias) {
+				$aliases[$docsFieldsAlias->docs_fields_id]['id'] = $docsFieldsAlias->id;
+				$aliases[$docsFieldsAlias->docs_fields_id]['templates_id'] = $docsFieldsAlias->templates_id;
+				$aliases[$docsFieldsAlias->docs_fields_id]['name'] = $docsFieldsAlias->alias;
+			}
+		}
+		
+		//dd($aliases);
+		
 		// Get Doc Fields Values
 		$doc_values_arr = $docs_obj->getDocsFieldsValues([$id]);
 		
@@ -373,6 +388,7 @@ class DocsController extends Controller {
 			->with('docs_fields_roles_rights', $docs_fields_roles_rights)
 			->with('id', $id)
 			->with('ogrn', $doc_values_arr[ $id ]['5']['value'])
+			->with('aliases', $aliases)
 			->withRequest($request);
 	}
 	

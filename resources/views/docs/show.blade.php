@@ -180,7 +180,13 @@
 										@continue
 									@endif
 									<fieldset class="well the-fieldset">
-										<legend class="the-legend bold">{{ $v['name'] }}</legend>
+										<legend class="the-legend bold">
+											@if (!empty($aliases[$k]['name']))
+												{{ $aliases[$k]['name'] }}
+											@else
+												{{ $v['name'] }}
+											@endif
+										</legend>
 										@switch($v['type'])
 											@case('select')
 											{{--@if ($v['link'] == 'okopfs')
@@ -326,7 +332,13 @@
 									@endif
 
 									<fieldset class="well the-fieldset">
-										<legend class="the-legend bold">{{ $doc_field->name }}</legend>
+										<legend class="the-legend bold">
+											@if (!empty($aliases[$doc_field->id]['name']))
+												{{ $aliases[$doc_field->id]['name'] }}
+											@else
+												{{ $doc_field->name }}
+											@endif
+										</legend>
 										@if ($docs_fields_roles_rights[$doc_field->id] == 1)
 											@if (!empty($doc_values_arr[$docs['id']][$doc_field->id]['value']))
 												@if($doc_field->type == 'select')
@@ -374,8 +386,16 @@
 															@if (count($pays) > 0)
 																@foreach ($pays as $pay)
 																	<option value="{{ $pay->id }}"
-																			@if (old('doc_field'.$doc_field->id) == $pay->id) selected
-																			@elseif (!empty($doc_values_arr[$docs['id']][$doc_field->id]['value'])) @if ($pay->id == $doc_values_arr[$docs['id']][$doc_field->id]['value']) selected="selected" @endif @endif>{{ $pay->name }}</option>
+																		@if (old('doc_field'.$doc_field->id) == $pay->id)
+																			selected="selected"
+																		@elseif (!empty($doc_values_arr[$docs['id']][$doc_field->id]['value']))
+																			@if ($pay->id == $doc_values_arr[$docs['id']][$doc_field->id]['value'])
+																				selected="selected"
+																			@endif
+																		@elseif ($pay->id == 1)
+																			selected="selected"
+																		@endif
+																	>{{ $pay->name }}</option>
 																@endforeach
 															@endif
 														@endif
@@ -383,8 +403,16 @@
 															@if (count($junks) > 0)
 																@foreach ($junks as $junk)
 																	<option value="{{ $junk->id }}"
-																			@if (old('doc_field'.$doc_field->id) == $junk->id) selected
-																			@elseif (!empty($doc_values_arr[$docs['id']][$doc_field->id]['value'])) @if ($junk->id == $doc_values_arr[$docs['id']][$doc_field->id]['value']) selected="selected" @endif @endif>{{ $junk->name }}</option>
+																		@if (old('doc_field'.$doc_field->id) == $junk->id)
+																			selected="selected"
+																		@elseif (!empty($doc_values_arr[$docs['id']][$doc_field->id]['value']))
+																			@if ($junk->id == $doc_values_arr[$docs['id']][$doc_field->id]['value'])
+																				selected="selected"
+																			@endif
+																		@elseif ($junk->id == 2)
+																			selected="selected"
+																		@endif
+																	>{{ $junk->name }}</option>
 																@endforeach
 															@endif
 														@endif
