@@ -75,39 +75,47 @@ class DocsController extends Controller {
 		}
 		
 		// Get Docs
-		$result = DB::table('elpts_docs')->where('doctypes_id', $doctypes_id);
+		$result = DB::table('elpts_docs')
+			->select('elpts_docs.*', 'elpts_logs.created_at as status_3_created_at')
+			->leftJoin('elpts_logs', function ($leftJoin) {
+				$leftJoin->on('elpts_logs.doc_id', '=', 'elpts_docs.id');
+				$leftJoin->on('elpts_logs.operation_id', '=', DB::raw(3));
+			})
+			->where('elpts_docs.doctypes_id', $doctypes_id);
 		
 		if (count($ids)) {
-			$result->whereIn('id', $ids);
+			$result->whereIn('elpts_docs.id', $ids);
 		}
 		else {
 			if ($filtered) {
-				$result->where('id', '=', '-1');
+				$result->where('elpts_docs.id', '=', '-1');
 			}
 		}
 		
 		if (isset($request->filter_prefix)) {
-			$result->where('prefix_id', '=', $request->filter_prefix);
+			$result->where('elpts_docs.prefix_id', '=', $request->filter_prefix);
 		}
 		if (isset($request->filter_status)) {
 			if ($request->filter_status) {
-				$result->where('status_id', '=', $request->filter_status);
+				$result->where('elpts_docs.status_id', '=', $request->filter_status);
 			}
 			else {
-				$result->where('status_id', '>', $request->filter_status);
+				$result->where('elpts_docs.status_id', '>', $request->filter_status);
 			}
 		}
 		if (isset($request->filter_date_from)) {
-			$result->where('created_at', '>=', date('Y-m-d H:i:s', strtotime($request->filter_date_from)));
+			$result->where('elpts_logs.created_at', '>=', date('Y-m-d H:i:s', strtotime($request->filter_date_from)));
 		}
 		if (isset($request->filter_date_to)) {
-			$result->where('created_at', '<=', date('Y-m-d H:i:s', strtotime($request->filter_date_to)));
+			$result->where('elpts_logs.created_at', '<=', date('Y-m-d H:i:s', strtotime($request->filter_date_to)));
 		}
 		// By Default Status = '1'
 		if (!isset($request->filter_prefix) && !isset($request->filter_status) && !isset($request->filter_ogrn) && !isset($filter_inn) && !isset($request->filter_orgname) && !isset($request->filter_date_from) && !isset($request->filter_date_to)) {
-			$result->where('status_id', '=', '1');
+			$result->where('elpts_docs.status_id', '=', '1');
 		}
-		$result->orderby('id', 'asc');
+		$result->orderByRaw('elpts_logs.created_at IS NOT NULL desc');
+		$result->orderBy('elpts_logs.created_at', 'desc');
+		$result->orderby('elpts_docs.id', 'asc');
 		if ($request->method != 'export') {
 			$docs = $result->paginate($docs_quantity);
 		}
@@ -352,10 +360,25 @@ class DocsController extends Controller {
 			}
 		}
 		
-		//dd($aliases);
-		
 		// Get Doc Fields Values
 		$doc_values_arr = $docs_obj->getDocsFieldsValues([$id]);
+		
+		// Get Templates Object
+		$template_fields_obj = new Templates;
+		
+		// Get Template Fields Values
+		$template_values_arr = $template_fields_obj->getTemplateFieldsValues($docs[0]['templates_id']);
+		
+		$templatesFieldsArr = [];
+		if (!empty($template_values_arr)) {
+			foreach ($template_values_arr as $k => $v) {
+				$templatesFieldsArr[$v['docs_id']]['name'] = $v['name'];
+				$templatesFieldsArr[$v['docs_id']]['value'] = $v['value'];
+				$templatesFieldsArr[$v['docs_id']]['required'] = $v['required'];
+			}
+		}
+		
+		//\Log::Debug($templatesFieldsArr);
 		
 		// Get Other Docs With The Same OGRN/OGRNIP
 		$prev_docs = $docs_obj->getPrevDocsByOgrn($id, $doc_values_arr[ $id ]['5']['value']);
@@ -367,6 +390,8 @@ class DocsController extends Controller {
 		if (!empty($rights)) {
 			$docs_fields_roles_rights = $settings_obj->getDocsFieldsRolesRights($rights);
 		}
+		
+		//\Log::Debug($docs_fields_roles_rights);
 		
 		return view('docs.show')
 			->withDocs($docs[0])
@@ -382,6 +407,7 @@ class DocsController extends Controller {
 			->with('doctypes_id', $doctypes_id)
 			->with('doc_fields', $doc_fields)
 			->with('doc_values_arr', $doc_values_arr)
+			->with('template_values_arr', $templatesFieldsArr)
 			->with('prev_docs', $prev_docs)
 			->with('doctype', $doctype)
 			->with('rights', $rights)
@@ -430,6 +456,44 @@ class DocsController extends Controller {
 		// Update Docs Fields Statuses
 		$docs_obj->updateDocFieldsStatuses($id, $docs_fields, $request);
 		
+		// Set Doc Number
+		if ($request->status_id == 3) {
+			$cur_number = $docs_obj->getCurrentNumber($doc->doctypes_id, $doc->prefix_id);
+			$number = $cur_number + 1;
+			
+			// Get Prefixes
+			$prefixes = Prefixes::where([
+				['enable', '=', '1'],
+				['doctypes_id', '=', $doc->doctypes_id],
+			])
+				->get();
+			
+			$prefix = '';
+			if (count($prefixes) > 0) {
+				foreach ($prefixes->all() as $value) {
+					if ($value->id == $doc->prefix_id) {
+						$prefix = $value->name;
+						break;
+					}
+				}
+			}
+			
+			// BEGIN Task "SITEELPTS-30"
+			$zeros = '';
+			if (strlen($number) < 7) {
+				for ($i = 0; $i < (7 - strlen($number)); $i++) {
+					$zeros .= '0';
+				}
+			}
+			$postfix = 'рф';
+			// END Task "SITEELPTS-30"
+			
+			$prefix_number = $prefix . '/' . $zeros . $number . $postfix;
+			
+			$doc->number = $number;
+			$doc->prefix_number = $prefix_number;
+		}
+		
 		// Save Doc
 		$doc->save();
 		
@@ -447,7 +511,7 @@ class DocsController extends Controller {
 		$template_values_arr = $template_fields_obj->getTemplateFieldsValues($templates_id);
 		
 		// Send E-mail With Accepted Answer
-		if ($request->status_id == 3 && !empty($template_values_arr['4']['value'])) {
+		if ($request->status_id == 8 && !empty($template_values_arr['4']['value'])) {
 			// Replace Vars with Data
 			$template_values_arr['4']['value'] = str_replace('%NUMBER%', $doc->prefix_number, $template_values_arr['4']['value']);
 			if (!empty($doc_values_arr[$id]['41']['value'])) {

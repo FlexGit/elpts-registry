@@ -18,7 +18,7 @@
 									<th>Номер</th>
 									<th>Статус</th>
 									<th>Шаблон</th>
-									<th>Дата создания</th>
+									<th>Дата заключения договора</th>
 									<th></th>
 								</tr>
 								</thead>
@@ -43,7 +43,7 @@
 												@endif
 											</td>
 											<td>{{ $v['template'] }}</td>
-											<td>{{ $v['created_at'] }}</td>
+											<td>{{ $v['status_3_created_at'] }}</td>
 											<td>
 												<a href="/docs/1/{{ $k }}?page={{ $request->page }}&filter_prefix={{ $request->filter_prefix }}&filter_status={{ $request->filter_status }}&filter_ogrn={{ $request->filter_ogrn }}&filter_inn={{ $request->filter_inn }}&filter_orgname={{ $request->filter_orgname }}"
 												   class="btn btn-default btn-sm">Показать</a>
@@ -219,11 +219,15 @@
 												$v['value'] = mb_substr($v['value'], 2);
 											}
 											?>
-											<span class="field_value">{{ $v['value'] }}</span>
-											<div style="float:right;">
-												<button type="button" class="btn btn-info btn-xs copy_btn"><i
-															class="fa fa-copy"></i></button>
-											</div>
+											@if ($k == 20 && $docs['status_id'] == 9 && $docs_fields_roles_rights[20] == 2)
+												<textarea name="doc_field{{ $k }}" class="form-control">@if(old('doc_field'.$k)){{old('doc_field'.$k)}} @elseif (!empty($v['value'])) {{ $v['value'] }} @endif</textarea>
+											@else
+												<span class="field_value">{{ $v['value'] }}</span>
+												<div style="float:right;">
+													<button type="button" class="btn btn-info btn-xs copy_btn"><i
+																class="fa fa-copy"></i></button>
+												</div>
+											@endif
 											@break
 											@case('textarea')
 											<span class="field_value">{{ $v['value'] }}</span>
@@ -322,6 +326,9 @@
 							</fieldset>
 							@if (count($doc_fields) > 0)
 								@foreach ($doc_fields->all() as $doc_field)
+									@if (!$template_values_arr[$doc_field->id]['value'])
+										@continue
+									@endif
 									@if (empty($docs_fields_roles_rights[$doc_field->id]))
 										@continue
 									@endif
@@ -338,6 +345,9 @@
 											@else
 												{{ $doc_field->name }}
 											@endif
+											{{--@if ($template_values_arr[$doc_field->id]['required'])
+												<span class="red required_sign{{ $doc_field->id }}">*</span>
+											@endif--}}
 										</legend>
 										@if ($docs_fields_roles_rights[$doc_field->id] == 1)
 											@if (!empty($doc_values_arr[$docs['id']][$doc_field->id]['value']))

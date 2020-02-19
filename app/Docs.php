@@ -81,8 +81,12 @@ class Docs extends Model
     public function getPrevDocsByOgrn($id, $ogrn)
     {
 		$rows = DB::table('elpts_docs')
-			->select('elpts_docs.id', 'elpts_docs.prefix_number', 'elpts_docs.status_id', 'elpts_docs.templates_id', 'elpts_docs.doctypes_id', 'elpts_docs.created_at', 'elpts_templates.name as template')
+			->select('elpts_docs.id', 'elpts_docs.prefix_number', 'elpts_docs.status_id', 'elpts_docs.templates_id', 'elpts_docs.doctypes_id', 'elpts_templates.name as template', 'elpts_logs.created_at as status_3_created_at')
 			->join('elpts_docs_fields_values', 'elpts_docs_fields_values.docs_id', '=', 'elpts_docs.id')
+			->leftJoin('elpts_logs', function ($leftJoin) {
+				$leftJoin->on('elpts_logs.doc_id', '=', 'elpts_docs.id');
+				$leftJoin->on('elpts_logs.operation_id', '=', DB::raw(3));
+			})
 			->leftJoin('elpts_templates', 'elpts_templates.id', '=', 'elpts_docs.templates_id')
 			->where([
 				['elpts_docs_fields_values.fields_id', '=', '5'],
@@ -90,6 +94,8 @@ class Docs extends Model
 				['elpts_docs.status_id', '>', '0'],
 			])
 			->orderBy('elpts_docs.doctypes_id')
+			->orderByRaw('elpts_logs.created_at IS NOT NULL desc')
+			->orderBy('elpts_logs.created_at', 'desc')
 			->orderBy('elpts_docs.id')
 			->get();
 
@@ -103,7 +109,7 @@ class Docs extends Model
        			$values_arr[$value->doctypes_id][$value->id]['templates_id'] = $value->templates_id;
        			$values_arr[$value->doctypes_id][$value->id]['template'] = $value->template;
        			$values_arr[$value->doctypes_id][$value->id]['doctypes_id'] = $value->doctypes_id;
-       			$values_arr[$value->doctypes_id][$value->id]['created_at'] = $value->created_at;
+       			$values_arr[$value->doctypes_id][$value->id]['status_3_created_at'] = $value->status_3_created_at;
         	}
         }
 
@@ -229,4 +235,20 @@ class Docs extends Model
 			}
 		}
     }
+	
+	/**
+	 * Get Doctype's Max Number.
+	 *
+	 * @param  int $doctypes_id
+	 * @param  int $prefix_id
+	 * @return int $number
+	 */
+	public function getCurrentNumber($doctypes_id, $prefix_id) {
+		return DB::table('elpts_docs')
+			->where([
+				['doctypes_id', '=', $doctypes_id],
+				['prefix_id', '=', $prefix_id],
+			])
+			->max('number');
+	}
 }

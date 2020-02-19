@@ -22,8 +22,9 @@ class Templates extends Model
     public function getTemplateFieldsValues($id)
     {
 		$values = DB::table('elpts_templates_fields_values')
+			->select('elpts_templates_fields_values.fields_id', 'elpts_templates_fields_values.value', 'elpts_templates_fields_values.required', 'elpts_templates_fields.name', 'elpts_docs_fields.id as docs_id')
 			->join('elpts_templates_fields', 'elpts_templates_fields_values.fields_id', '=', 'elpts_templates_fields.id')
-			->select('elpts_templates_fields_values.*', 'elpts_templates_fields.*')
+			->leftJoin('elpts_docs_fields', 'elpts_docs_fields.templates_fields_id', '=', 'elpts_templates_fields.id')
 			->where([
 				['elpts_templates_fields_values.templates_id', '=', $id],
 				['elpts_templates_fields.enable', '=', '1']
@@ -38,6 +39,8 @@ class Templates extends Model
         	{
        			$values_arr[$value->fields_id]['name'] = $value->name;
        			$values_arr[$value->fields_id]['value'] = $value->value;
+				$values_arr[$value->fields_id]['required'] = $value->required;
+				$values_arr[$value->fields_id]['docs_id'] = $value->docs_id;
         	}
         }
 
