@@ -61,7 +61,7 @@ class DocsController extends Controller {
 		if (isset($request->filter_orgname)) {
 			$filtered = 1;
 			$result->where([
-				['value', '=', $request->filter_orgname],
+				['value', 'like', '%' . $request->filter_orgname . '%'],
 				['fields_id', '=', '41'],
 			]);
 		}
@@ -446,6 +446,12 @@ class DocsController extends Controller {
 		
 		// Get Docs Object
 		$docs_obj = new Docs;
+
+		// Get Statuses
+		$statuses = $docs_obj->getStatuses();
+		
+		// Get Docs Object
+		$docs_obj = new Docs;
 		
 		// Get Doc Fields
 		$docs_fields = $docs_obj->getDocsFields($doctypes_id);
@@ -596,6 +602,18 @@ class DocsController extends Controller {
 			else
 				$log->value = 'Да';
 			$log->save();
+		}
+		
+		// Send E-mail To Operator With Status Change
+		if (count($statuses) > 0) {
+			foreach ($statuses->all() as $status) {
+				if ($status->id == $request->status_id && !empty($status->notification_email) && !empty($status->notification_text)) {
+					Mail::send('emails.email_operator_status_change', ['body' => $status->notification_text], function ($message) use ($status) {
+						$message->to($status->notification_email)->subject('Уведомление о назначении нового акцепта');
+					});
+					break;
+				}
+			}
 		}
 		
 		return redirect('/docs/' . $doctypes_id . '?page=' . $request->page . '&filter_prefix=' . $request->filter_prefix . '&filter_status=' . $request->filter_status . '&filter_ogrn=' . $request->filter_ogrn . '&filter_inn=' . $request->filter_inn . '&filter_orgname=' . $request->filter_orgname . '&filter_date_from=' . $request->filter_date_from . '&filter_date_to=' . $request->filter_date_to)
