@@ -609,7 +609,8 @@ class DocsController extends Controller {
 			foreach ($statuses->all() as $status) {
 				if ($status->id == $request->status_id && !empty($status->notification_email) && !empty($status->notification_text)) {
 					Mail::send('emails.email_operator_status_change', ['body' => $status->notification_text], function ($message) use ($status) {
-						$message->to($status->notification_email)->subject('Уведомление о назначении нового акцепта');
+						$emails = array_map('trim', explode(';', str_replace(',', ';', $status->notification_email)));
+						$message->to($emails)->subject('Уведомление о назначении нового акцепта');
 					});
 					break;
 				}
